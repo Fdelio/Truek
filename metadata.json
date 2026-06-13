@@ -1,0 +1,392 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect, useRef } from 'react';
+import { ChatState, ChatMessage } from '../types';
+
+interface ChatViewProps {
+  chatState: ChatState;
+  setChatState: React.Dispatch<React.SetStateAction<ChatState>>;
+  addLog: (title: string, data: any) => void;
+}
+
+export default function ChatView({
+  chatState,
+  setChatState,
+  addLog,
+}: ChatViewProps) {
+  const [inputText, setInputText] = useState('');
+  const chatScrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll chat content to bottom when new messages arrive
+    if (chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.scrollTop = chatScrollContainerRef.current.scrollHeight;
+    }
+  }, [chatState.messages, chatState.isTyping]);
+
+  const advanceDealProgression = (status: 'propuesto' | 'aceptado' | 'cita' | 'completado') => {
+    setChatState(prev => ({
+      ...prev,
+      dealStatus: status,
+    }));
+    addLog(`Negociación: Progresión del trato cambiada a "${status.toUpperCase()}"`, {
+      newStep: status,
+      networkContractNode_hash: `sha512_deal_node_${Date.now()}_node`,
+    });
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: `self_${Date.now()}`,
+      sender: 'self',
+      text: inputText,
+      time: '10:46 AM',
+    };
+
+    setChatState(prev => ({
+      ...prev,
+      messages: [...prev.messages, userMessage],
+    }));
+
+    setInputText('');
+    addLog('Chat: Mensaje del usuario enviado al canal P2P', { text: inputText });
+
+    // Simulate Juan typing and responding
+    setChatState(prev => ({ ...prev, isTyping: true }));
+    
+    setTimeout(() => {
+      let juanAnswer = '¿Qué tal? Sí, son repuestos marca Geekria premium que aíslan muchísimo mejor y duran el doble. La verdad es que no pierden fidelidad de sonido.';
+      let milestoneTrigger: ChatMessage | null = null;
+
+      if (inputText.toLowerCase().includes('hola') || inputText.toLowerCase().includes('buenas')) {
+        juanAnswer = 'Hola, ¿cómo estás? Sí, contame si tenés alguna duda sobre los auriculares, están impecables.';
+      } else if (inputText.toLowerCase().includes('lugar') || inputText.toLowerCase().includes('donde') || inputText.toLowerCase().includes('encontrar')) {
+        juanAnswer = 'Buenísimo, si querés nos encontramos en el Starbucks de la calle 85 que es súper transitado y seguro para ambos.';
+        milestoneTrigger = {
+          id: `sys_milestone_location_${Date.now()}`,
+          sender: 'system',
+          systemIcon: 'handshake',
+          text: 'Se acordó locación segura. El estado del trato progresa a: CITA.',
+          time: '10:48 AM',
+        };
+      }
+
+      setChatState(prev => {
+        let updatedMessages = [...prev.messages, {
+          id: `juan_${Date.now()}`,
+          sender: 'juan' as const,
+          text: juanAnswer,
+          time: '10:47 AM',
+        } as ChatMessage];
+
+        if (milestoneTrigger) {
+          updatedMessages.push(milestoneTrigger);
+        }
+
+        return {
+          ...prev,
+          messages: updatedMessages,
+          isTyping: false,
+          dealStatus: milestoneTrigger ? ('cita' as const) : prev.dealStatus,
+        };
+      });
+
+      addLog('Chat: Respuesta recibida del oferente "Juan D."', { responseText: juanAnswer });
+      if (milestoneTrigger) {
+        addLog('Negociación: Cita acordada automáticamente por reconocimiento semántico de locación', {
+          loc: 'Starbucks Calle 85',
+          p2p_active_milestone: 'cita',
+        });
+      }
+    }, 1500);
+  };
+
+  const triggerAceptar = () => {
+    advanceDealProgression('aceptado');
+    setChatState(prev => ({
+      ...prev,
+      messages: [
+        ...prev.messages,
+        {
+          id: `sys_accept_${Date.now()}`,
+          sender: 'system',
+          systemIcon: 'check_circle',
+          text: 'Felicidades! Ambos aceptaron los términos iniciales. El trato progresa a: ACEPTADO.',
+          time: '10:48 AM',
+        },
+      ],
+    }));
+    addLog('Negociación: Acuerdo sellado en el Sandbox de TrueK', { status: 'aceptado' });
+  };
+
+  const triggerContraoferta = () => {
+    setChatState(prev => ({
+      ...prev,
+      messages: [
+        ...prev.messages,
+        {
+          id: `sys_counter_${Date.now()}`,
+          sender: 'system',
+          systemIcon: 'edit_note',
+          text: 'Contraoferta registrada. Escribe un mensaje especificando las nuevas condiciones.',
+          time: '10:49 AM',
+        },
+      ],
+    }));
+    addLog('Negociación: Solicitud de contraoferta registrada', { status: 'contraoferta' });
+  };
+
+  const triggerRechazar = () => {
+    setChatState(prev => ({
+      ...prev,
+      messages: [
+        ...prev.messages,
+        {
+          id: `sys_cancel_${Date.now()}`,
+          sender: 'system',
+          systemIcon: 'cancel',
+          text: 'El trato ha sido desestimado por el momento.',
+          time: '10:50 AM',
+        },
+      ],
+    }));
+    addLog('Negociación: Intercambio cancelado o desestimado', { status: 'cancelado' });
+  };
+
+  return (
+    <div className="relative flex flex-col min-h-[700px] w-full bg-[#f8f9fa] rounded-2xl shadow-inner border border-zinc-200 overflow-hidden max-h-[820px] text-[#191c1d]">
+      
+      {/* Real-time interactive progression steps bar */}
+      <section className="bg-white border-b border-zinc-200 p-3 pt-4">
+        <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest text-center mb-2.5">Progreso de la Negociación</label>
+        
+        <div className="flex md:flex-row justify-between items-center relative gap-1">
+          {/* Propuesto step */}
+          <div className="flex flex-col items-center flex-1">
+            <button 
+              id="deal-step-propuesto"
+              type="button"
+              onClick={() => advanceDealProgression('propuesto')}
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm transition-all duration-300 ${
+                chatState.dealStatus === 'propuesto'
+                  ? 'bg-[#008378] text-white ring-4 ring-[#008378]/25 scale-110'
+                  : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'
+              }`}>
+              1
+            </button>
+            <span className="text-[8px] font-extrabold mt-1 text-zinc-600 uppercase">Propuesto</span>
+          </div>
+
+          <div className="h-[2px] flex-1 bg-zinc-200 -mt-3.5"></div>
+
+          {/* Aceptado step */}
+          <div className="flex flex-col items-center flex-1">
+            <button 
+              id="deal-step-aceptado"
+              type="button"
+              onClick={() => advanceDealProgression('aceptado')}
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm transition-all duration-300 ${
+                chatState.dealStatus === 'aceptado'
+                  ? 'bg-[#008378] text-white ring-4 ring-[#008378]/25 scale-110'
+                  : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'
+              }`}>
+              2
+            </button>
+            <span className="text-[8px] font-extrabold mt-1 text-zinc-600 uppercase">Aceptado</span>
+          </div>
+
+          <div className="h-[2px] flex-1 bg-zinc-200 -mt-3.5"></div>
+
+          {/* Cita step */}
+          <div className="flex flex-col items-center flex-1">
+            <button 
+              id="deal-step-cita"
+              type="button"
+              onClick={() => advanceDealProgression('cita')}
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm transition-all duration-300 ${
+                chatState.dealStatus === 'cita'
+                  ? 'bg-[#008378] text-white ring-4 ring-[#008378]/25 scale-110'
+                  : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'
+              }`}>
+              3
+            </button>
+            <span className="text-[8px] font-extrabold mt-1 text-zinc-600 uppercase">Cita</span>
+          </div>
+
+          <div className="h-[2px] flex-1 bg-zinc-200 -mt-3.5"></div>
+
+          {/* Completado step */}
+          <div className="flex flex-col items-center flex-1">
+            <button 
+              id="deal-step-completado"
+              type="button"
+              onClick={() => advanceDealProgression('completado')}
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm transition-all duration-300 ${
+                chatState.dealStatus === 'completado'
+                  ? 'bg-[#008378] text-white ring-4 ring-[#008378]/25 scale-110'
+                  : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'
+              }`}>
+              4
+            </button>
+            <span className="text-[8px] font-extrabold mt-1 text-zinc-600 uppercase">Hecho</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Side-by-side Proposal Visualizer deck cards */}
+      <section className="bg-white p-3 border-b border-zinc-200 grid grid-cols-2 gap-2 relative">
+        {/* Absolute Smart Match Score Ring Badge */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+          <div className="bg-gradient-to-r from-[#4648d4] to-[#6063ee] p-0.5 rounded-full shadow-lg">
+            <div className="bg-white rounded-full w-12 h-12 flex flex-col items-center justify-center border border-[#6063ee]/25">
+              <span id="chat-match-percentage" className="font-sans text-xs font-black text-[#4648d4] leading-none">94%</span>
+              <span className="text-[6px] text-zinc-500 uppercase tracking-widest leading-none font-bold">Match</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Your Shoes Card */}
+        <div className="bg-zinc-50 rounded-lg overflow-hidden border border-zinc-200 group flex flex-col text-[10px]">
+          <div className="h-16 relative">
+            <img alt="Your shoe" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCiSbGb53y3XwHzDMQ_kd3zcWzB1LPlE3ZYT3oAhnygtP2AQCtGtbSs5QXeHYn3I1kRNz7r2d_4XjA12netQclKwtk-NtCC4UkHliyS73vWOdgXeZLbKckLKttN3MyJ8Q8C7sxJFoTVvQxrwIy0MVwKzClOFmEoc_k7TKVWXzKtJgrA37fh0jb6ViI9Rxv7-DpY09rx0NQQuASuCeoOyCyA8nNLSSGNWPiLme96wSb6INoo50o1BHr" />
+            <span className="absolute top-1 left-1.5 bg-[#00685f] text-white px-1 rounded text-[7px] font-black uppercase">Tuyo</span>
+          </div>
+          <div className="p-1.5">
+            <h5 className="font-bold truncate">Ultra-Dynamic Pro Z</h5>
+            <p className="text-[8px] text-zinc-500 truncate">Poco uso, caja original.</p>
+          </div>
+        </div>
+
+        {/* His Headphones Card */}
+        <div className="bg-zinc-50 rounded-lg overflow-hidden border border-zinc-200 group flex flex-col text-[10px]">
+          <div className="h-16 relative">
+            <img alt="His headphones" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4aaGbLeHFc8DDvQd7ZwnsjGjQ2txYubC9JfeIDSz5jEHiKULlWj_eESBtot_oMg2zqHxTfaKjjcWPkgN6ZyzS9tV73MyjfZiuxxo-FOTPyHPUohTl8Bx6TemANALG5glC_1h3CcX0TX1j9FnTdh0ZvSgulMi_nRpWRuVVtXfyBlPetTnJGmj8Rrj6pwvpyNP3fieqRWELx8Mw8yBY0H8NxdRZ6t5UeXmZe3r_XpiY7lvuHUr7bt-U" />
+            <span className="absolute top-1 right-1.5 bg-[#fea619] text-[#2a1700] px-1 rounded text-[7px] font-black uppercase">Oferta</span>
+          </div>
+          <div className="p-1.5">
+            <h5 className="font-bold truncate">Audio-Sonic Elite X1</h5>
+            <p className="text-[8px] text-zinc-500 truncate">Súper impecables.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Direct Interactive Negotiation buttons */}
+      <section className="bg-zinc-100 p-2 border-b border-zinc-200 grid grid-cols-3 gap-1.5">
+        <button 
+          id="chat-action-accept"
+          type="button" 
+          onClick={triggerAceptar}
+          className="bg-[#00685f] hover:bg-[#008378] text-white rounded-lg py-2 flex flex-col items-center justify-center gap-0.5 shadow-sm active:scale-95 transition-all">
+          <span className="material-symbols-outlined text-[15px] block font-bold">check_circle</span>
+          <span className="text-[8px] font-black uppercase tracking-wider">Aceptar</span>
+        </button>
+        <button 
+          id="chat-action-counter"
+          type="button" 
+          onClick={triggerContraoferta}
+          className="bg-[#edeeef] hover:bg-zinc-200 text-[#00685f] border border-[#00685f]/25 rounded-lg py-2 flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-all">
+          <span className="material-symbols-outlined text-[15px] block">edit_note</span>
+          <span className="text-[8px] font-black uppercase tracking-wider">Contraoferta</span>
+        </button>
+        <button 
+          id="chat-action-reject"
+          type="button" 
+          onClick={triggerRechazar}
+          className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg py-2 flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-all">
+          <span className="material-symbols-outlined text-[15px] block">cancel</span>
+          <span className="text-[8px] font-black uppercase tracking-wider">Rechazar</span>
+        </button>
+      </section>
+
+      {/* Main Messaging timeline body */}
+      <div 
+        id="chat-messages-container"
+        ref={chatScrollContainerRef} 
+        className="flex-1 overflow-y-auto space-y-3 p-3 scroll-smooth bg-zinc-50 bg-[radial-gradient(#bcc9c6_0.5px,transparent_0.5px)] [background-size:12px_12px]">
+        
+        {chatState.messages.map((msg) => {
+          if (msg.sender === 'system') {
+            return (
+              <div key={msg.id} className="flex justify-center my-2">
+                <div id="chat-system-milestone" className="bg-[#e1e0ff] text-[#07006c] px-3 py-1 rounded-full text-[9px] font-bold flex items-center gap-1 border border-[#07006c]/10">
+                  <span className="material-symbols-outlined text-[12px] block">{msg.systemIcon || 'info'}</span>
+                  <span>{msg.text}</span>
+                </div>
+              </div>
+            );
+          }
+
+          const isSelf = msg.sender === 'self';
+          return (
+            <div key={msg.id} className={`flex gap-2 max-w-[85%] ${isSelf ? 'ml-auto flex-row-reverse' : ''}`}>
+              {!isSelf && (
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-[#bcc9c6]/50 shrink-0">
+                  <img alt="Partner" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8bXC7tIFwIwUSOIQ_1iA4cyoARe_3JXdD31W4PfYx73Yuw6xlZ7C_Nethn2USuiQl51-LECe_NMKQlAozPdBB2W1EQOYFoj9CgSHVHg-NCYm7G2fqa8eR3iQ__5FARK8fps5lXbMt3JHYs1NW8JZ5-cfNaRVTs63By3DrGknduNNAT18kdDWuBeK2L_QsMHes9PxL7xdZl6Y5XMBxPMU-BPG1LbVYinXRJwE8TMYCKyZu_om9Arcl" />
+                </div>
+              )}
+              
+              <div className="space-y-0.5">
+                <div id="chat-bubble-text" className={`p-2 px-3 text-xs rounded-xl shadow-sm ${
+                  isSelf 
+                    ? 'bg-[#008378] text-white rounded-tr-none' 
+                    : 'bg-white text-zinc-900 rounded-tl-none border border-zinc-250/60'
+                }`}>
+                  {msg.text}
+                </div>
+                <div className={`text-[8px] text-zinc-400 px-1 ${isSelf ? 'text-right' : ''}`}>{msg.time}</div>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Live typing indicator micro-interaction */}
+        {chatState.isTyping && (
+          <div id="chat-typing-indicator" className="flex items-center gap-1.5 text-zinc-400 text-[10px] bg-white px-2.5 py-1 rounded-full border border-zinc-200 inline-flex shadow-sm max-w-[150px] animate-pulse">
+            <div className="flex gap-0.5">
+              <span className="w-1 h-1 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-1 h-1 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-1 h-1 bg-zinc-400 rounded-full animate-bounce"></span>
+            </div>
+            <span>Juan está escribiendo...</span>
+          </div>
+        )}
+      </div>
+
+      {/* Input text toolbar form */}
+      <form onSubmit={handleSendMessage} className="p-2 border-t border-zinc-200 bg-white flex gap-2">
+        <button 
+          type="button" 
+          onClick={() => {
+            setInputText('¿Dónde definimos encontrarnos para ver el producto?');
+            addLog('Asistente: Pregunta por punto de encuentro autocompletada', {});
+          }}
+          className="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200 transition-colors flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined text-[16px] text-[#00685f]">location_on</span>
+        </button>
+        
+        <div className="relative flex-1">
+          <input 
+            id="chat-message-input"
+            type="text" 
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Escribe un mensaje..."
+            className="w-full bg-zinc-50 border-none rounded-xl text-xs py-2 px-3 pr-8 focus:bg-white focus:ring-2 focus:ring-[#00685f]/25 transition-all text-zinc-900 focus:outline-none"
+          />
+          <button 
+            id="chat-send-btn"
+            type="submit" 
+            className="absolute right-1 top-1 w-7 h-7 bg-[#008378] text-white rounded-lg flex items-center justify-center hover:bg-[#00685f] active:scale-90 transition-all select-none">
+            <span className="material-symbols-outlined text-[14px]">send</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

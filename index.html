@@ -1,0 +1,256 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
+import { FeedItem } from '../types';
+
+interface DiscoveryViewProps {
+  feedItems: FeedItem[];
+  onStartChat: () => void;
+  addLog: (title: string, data: any) => void;
+}
+
+export default function DiscoveryView({
+  feedItems,
+  onStartChat,
+  addLog,
+}: DiscoveryViewProps) {
+  const [distance, setDistance] = useState<number>(30);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'near' | 'recent' | 'barters' | 'donations'>('near');
+  const [filteredItems, setFilteredItems] = useState<FeedItem[]>(feedItems);
+  const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
+
+  // Filter and sort items dynamically representing an optimistic database refresh
+  useEffect(() => {
+    setIsUpdatingFeed(true);
+    const delayTimer = setTimeout(() => {
+      let result = [...feedItems];
+
+      // Match Search Bar Queries
+      if (searchQuery.trim().length > 0) {
+        result = result.filter(item => 
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.category.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+
+      // Filter by Distance slider value
+      result = result.filter(item => item.distance <= distance);
+
+      // Filter by active semantic filters
+      if (activeTab === 'barters') {
+        result = result.filter(item => item.type === 'barter');
+      } else if (activeTab === 'donations') {
+        result = result.filter(item => item.type === 'donation');
+      } else if (activeTab === 'near') {
+        // Sort closest first
+        result.sort((a, b) => a.distance - b.distance);
+      } else if (activeTab === 'recent') {
+        // Show recently published elements on top
+        result = result.filter(item => item.tag === 'RECIÉN PUBLICADO').concat(
+          result.filter(item => item.tag !== 'RECIÉN PUBLICADO')
+        );
+      }
+
+      setFilteredItems(result);
+      setIsUpdatingFeed(false);
+    }, 300); // 300ms skeleton glow for tactile high-tech feedback
+
+    return () => clearTimeout(delayTimer);
+  }, [distance, searchQuery, activeTab, feedItems]);
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setDistance(val);
+    addLog('Filtros: Slider de distancia modificado (Búsqueda optimista local)', {
+      newRadiusKm: val,
+      estimatedNetworkMatchCount: Math.max(1, Math.round(val * 0.4)),
+    });
+  };
+
+  const handleTabChange = (tab: 'near' | 'recent' | 'barters' | 'donations') => {
+    setActiveTab(tab);
+    addLog(`Filtros: Categoría de catálogo cambiada a "${tab}"`, { tab });
+  };
+
+  return (
+    <div className="relative flex flex-col min-h-[700px] w-full bg-[#f8f9fa] rounded-2xl shadow-inner border border-zinc-200 overflow-y-auto max-h-[820px] p-4 text-[#191c1d]">
+      
+      {/* Top Search Input and Mode Toggle */}
+      <section className="space-y-3 mb-5">
+        <label className="text-sm font-bold text-zinc-900 block" htmlFor="discovery-search-input">Explorar TrueK</label>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2">search</span>
+            <input 
+              id="discovery-search-input"
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="¿Qué buscas hoy?"
+              className="w-full pl-9 pr-4 py-2 text-xs bg-[#f3f4f5] border-none rounded-xl focus:ring-2 focus:ring-[#00685f] focus:bg-white focus:outline-none transition-all text-zinc-900"
+            />
+          </div>
+          <div className="bg-[#edeeef] p-0.5 rounded-lg flex shrink-0">
+            <button 
+              id="discovery-toggle-grid"
+              type="button" 
+              className="p-1 px-1.5 rounded bg-white text-[#00685f] shadow-sm">
+              <span className="material-symbols-outlined text-[16px] block">grid_view</span>
+            </button>
+            <button 
+              id="discovery-toggle-map"
+              type="button" 
+              onClick={() => addLog('Navigation: Mapa georeferenciado inactivo en Sandbox', {})}
+              className="p-1 px-1.5 rounded text-zinc-500 hover:bg-zinc-200">
+              <span className="material-symbols-outlined text-[16px] block">map</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Semantic filter chips carousel slider */}
+      <section className="mb-4">
+        <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none scroll-smooth">
+          <button
+            id="filter-tab-near"
+            type="button"
+            onClick={() => handleTabChange('near')}
+            className={`px-3 py-1 text-[11px] font-bold rounded-full border transition-all shrink-0 ${
+              activeTab === 'near' ? 'bg-[#008378] text-[#f4fffc] border-[#008378]' : 'bg-[#edeeef] text-[#3d4947] border-[#bcc9c6]/50'
+            }`}>
+            Cerca de mí
+          </button>
+          <button
+            id="filter-tab-recent"
+            type="button"
+            onClick={() => handleTabChange('recent')}
+            className={`px-3 py-1 text-[11px] font-bold rounded-full border transition-all shrink-0 ${
+              activeTab === 'recent' ? 'bg-[#008378] text-[#f4fffc] border-[#008378]' : 'bg-[#edeeef] text-[#3d4947] border-[#bcc9c6]/50'
+            }`}>
+            Recién publicados
+          </button>
+          <button
+            id="filter-tab-barters"
+            type="button"
+            onClick={() => handleTabChange('barters')}
+            className={`px-3 py-1 text-[11px] font-bold rounded-full border transition-all shrink-0 ${
+              activeTab === 'barters' ? 'bg-[#008378] text-[#f4fffc] border-[#008378]' : 'bg-[#edeeef] text-[#3d4947] border-[#bcc9c6]/50'
+            }`}>
+            Solo trueque
+          </button>
+          <button
+            id="filter-tab-donations"
+            type="button"
+            onClick={() => handleTabChange('donations')}
+            className={`px-3 py-1 text-[11px] font-bold rounded-full border transition-all shrink-0 ${
+              activeTab === 'donations' ? 'bg-[#fea619] text-[#6a4200] border-[#fea619]' : 'bg-[#edeeef] text-[#3d4947] border-[#bcc9c6]/50'
+            }`}>
+            Solo donaciones
+          </button>
+        </div>
+
+        {/* Optimistic Distance slider */}
+        <div className="mt-3 bg-[#edeeef] p-3 rounded-xl border border-[#bcc9c6]/20">
+          <div className="flex justify-between items-center text-[11px] font-bold text-[#3d4947] mb-1">
+            <span>Rango máximo de distancia</span>
+            <span id="discovery-distance-display" className="text-[#00685f] font-extrabold">{distance} Km</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input 
+              id="discovery-distance-slider"
+              type="range" 
+              min="1" 
+              max="50" 
+              value={distance}
+              onChange={handleSliderChange}
+              className="flex-1 accent-[#00685f] cursor-pointer h-1 rounded-full bg-[#bcc9c6]"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Main Catalog Feed Render area */}
+      <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-2.5">Catálogo de la Comunidad</h3>
+
+      <div className="grid grid-cols-2 gap-3 pb-8">
+        {isUpdatingFeed ? (
+          // Tactical glow skeletons representing optimistic feedback loops
+          Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="bg-[#edeeef] rounded-xl overflow-hidden aspect-[4/5] p-3 space-y-2 border border-zinc-200 animate-pulse">
+              <div className="h-2/3 bg-zinc-300 rounded-lg" />
+              <div className="h-3 bg-zinc-350 w-3/4 rounded-full" />
+              <div className="h-2.5 bg-zinc-350 w-1/2 rounded-full mt-2" />
+            </div>
+          ))
+        ) : filteredItems.length === 0 ? (
+          <div className="col-span-2 py-8 text-center bg-white rounded-xl border border-dashed border-zinc-300 p-5">
+            <span className="material-symbols-outlined text-[32px] text-zinc-400 mb-1">info</span>
+            <p className="text-xs font-bold text-[#3d4947]">No se encontraron artículos</p>
+            <p className="text-[10px] text-zinc-500 mt-1">Prueba a ampliar el slider de distancia o introduce otra palabra clave.</p>
+          </div>
+        ) : (
+          filteredItems.map((item) => {
+            const isBarter = item.type === 'barter';
+            return (
+              <div 
+                id={`feed-card-${item.id}`}
+                key={item.id} 
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between border-b-2"
+                style={{ borderBottomColor: isBarter ? '#00685f' : '#fea619' }}>
+                
+                {/* Product Image Panel */}
+                <div className="relative aspect-[4/3] bg-zinc-100 overflow-hidden">
+                  <img alt={item.title} className="w-full h-full object-cover" src={item.image} />
+                  
+                  {/* Category Stamp label */}
+                  <span className={`absolute top-2 right-2 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full shadow ${
+                    isBarter ? 'bg-[#008378] text-white' : 'bg-[#fea619] text-[#2a1700]'
+                  }`}>
+                    {isBarter ? 'TRUEQUE' : 'REGALO'}
+                  </span>
+
+                  {item.tag && (
+                    <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-[#00685f] border border-[#00685f]/20 font-black text-[7px] tracking-wider px-1 rounded uppercase">
+                      {item.tag}
+                    </span>
+                  )}
+                </div>
+
+                {/* Info and Actions */}
+                <div className="p-3">
+                  <div className="flex justify-between items-start mb-1.5 gap-1">
+                    <h4 className="text-xs font-black text-[#191c1d] leading-snug truncate flex-1">{item.title}</h4>
+                    <span className="text-[9px] font-bold text-[#00685f] whitespace-nowrap">{item.distance} km</span>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-zinc-100">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img alt={item.userName} className="w-5 h-5 rounded-full object-cover shrink-0 border border-zinc-200" src={item.userAvatar} />
+                      <span className="text-[9px] font-semibold text-[#3d4947] truncate">{item.userName}</span>
+                    </div>
+                    
+                    <button 
+                      id={`chat-action-${item.id}`}
+                      type="button"
+                      onClick={() => {
+                        addLog('Navigation: Abriendo sala de chat con el oferente', { itemTitle: item.title, userName: item.userName });
+                        onStartChat();
+                      }}
+                      className="text-[#008378] hover:underline text-[9px] font-extrabold flex items-center gap-0.5 whitespace-nowrap select-none">
+                      <span>{isBarter ? 'Chatear' : 'Pedir'}</span>
+                      <span className="material-symbols-outlined text-[10px]">chat</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
