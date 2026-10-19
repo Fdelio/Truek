@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/* TrueK — paleta "verde lima + bosque + coral" (opción P3): fondo verde
+   lima de verdad, con un verde bosque bien oscuro como color de marca (el
+   texto y los encabezados que van directo arriba del lima usan esta
+   variante oscura, porque necesita ser bien oscura para leerse arriba de
+   un fondo tan claro) y un coral vivo como acento para botones y chips.
+   Definir los tokens acá (en vez de usar valores sueltos bg-[#...] por
+   todos lados) genera clases utilitarias reales (bg-primary, text-ink,
+   border-border, etc.) y permite cambiar el look entero del lugar desde
+   un solo archivo. */
+@theme {
+  --color-primary: #2d5f3e;
+  --color-primary-dark: #1f4a2e;
+  --color-primary-light: #dceedd;
+
+  --color-accent: #ff7a45;
+  --color-accent-dark: #b5451a;
+  --color-accent-light: #ffe1d3;
+
+  /* Violeta: cuarto color, reservado para "contraoferta" y como detalle
+     en el logo — aparte del trío lima/bosque/coral. "plum" es la
+     variante oscura, pensada para texto (sigue siendo legible arriba del
+     lima); "violet-vivid" es la variante decorativa pura (blobs, ícono
+     del logo) — no tiene que cumplir contraste de texto, así que puede
+     ser bien saturada/luminosa. */
+  --color-plum: #4c1d95;
+  --color-plum-light: #ede4fb;
+  --color-violet-vivid: #9b5de5;
+
+  /* Ocre/dorado: nació como el color del ícono del logo y la "K" de TrueK,
+     y ahora lo reutilizamos en otros lugares en vez del amarillo genérico
+     de Tailwind (amber-*) para que se sienta parte de la marca. "gold" es
+     la versión viva (ícono, triángulo, blobs). "gold-light" (fondo general
+     de la app, chips y avisos) y "gold-border" son un escalón más suaves
+     que "gold" — se probó igualarlas al dorado vivo del ícono y resultó
+     demasiado fuerte para verlo en toda la pantalla, así que quedaron a
+     mitad de camino entre ese dorado vivo y el beige pálido original.
+     El texto que va arriba de "gold-light" sigue usando el verde de marca
+     ("primary", el mismo de la barra/header) en vez de "gold-dark" — da
+     ~5:1 de contraste, incluso mejor que antes. "gold-dark" se mantiene
+     aparte, para los pocos lugares que necesitan fondo sólido con texto
+     blanco encima. */
+  --color-gold: #e8b923;
+  --color-gold-dark: #8a6410;
+  --color-gold-light: #f2cf5f;
+  --color-gold-border: #e3c65c;
+
+  --color-ink: #2b1d0e;
+  --color-ink-soft: #6b5638;
+  --color-ink-faint: #9c8768;
+
+  /* Fondo general de la app (detrás de las tarjetas blancas, la barra
+     inferior en celular, los chips sin seleccionar): la misma familia
+     dorada, pero un poco más suave que "gold-light" de arriba. */
+  --color-surface: #f2cf5f;
+  --color-bg: #f2cf5f;
+  /* "canvas" es el verde lima fuerte: el fondo real de cada pantalla.
+     "bg-soft" es una superficie clara (para inputs, el selector
+     grilla/mapa, hovers) — si fuera el mismo verde lima, esas superficies
+     internas quedarían invisibles (lima sobre lima). */
+  --color-canvas: #9ccb3b;
+  --color-bg-soft: #eaf0d4;
+  --color-border: #82ae2e;
+
+  --color-success: #3c8c5e;
+  --color-warning: #b9791e;
+  --color-danger: #a23b2e;
+
+  --font-display: "Baloo 2", "Nunito", system-ui, sans-serif;
+  --font-sans: "Nunito", "Baloo 2", system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* Material Symbols Rounded: ancho/relleno default; cada uso puede pisar
+   'FILL' puntualmente vía style inline (ya se usa así en algunas estrellas). */
+.material-symbols-rounded {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Microinteracciones "vivas": animaciones y un easing con rebote que
+   usamos en chips, botones, tarjetas y elementos decorativos para que la
+   interfaz se sienta menos rígida/corporativa, sin tocar la paleta. */
+@keyframes truek-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes truek-pop-in {
+  0% { opacity: 0; transform: scale(0.9) translateY(4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-truek-float {
+  animation: truek-float 3.4s ease-in-out infinite;
+}
+
+.animate-truek-pop-in {
+  animation: truek-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.ease-bounce {
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Blobs orgánicos: manchas de fondo puramente decorativas (siempre
+   pointer-events-none) con un border-radius irregular en vez de un
+   círculo prolijo. Cada instancia pone su propio tamaño/posición/color;
+   estas clases solo definen la "forma". */
+.blob-shape-1 { border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%; }
+.blob-shape-2 { border-radius: 63% 37% 30% 70% / 50% 45% 55% 50%; }
+.blob-shape-3 { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; }
+
+/* Sello/sticker con una esquina "chata" en vez de un pill perfecto —
+   usado en el sello de categoría de las tarjetas del catálogo. */
+.blob-badge { border-radius: 50% 50% 50% 8% / 60% 60% 40% 40%; }
+
+/* Borde festoneado (opción "B"): una fila de medios círculos recortados
+   en el borde superior de una franja de color, en vez de una línea recta
+   — el remate inferior de las tarjetas del catálogo, estilo "sello" o
+   molde de cupcake. El color lo pone cada instancia (style inline). */
+.scallop-edge-bottom {
+  height: 10px;
+  -webkit-mask-image: radial-gradient(circle at 7px 0, transparent 6.5px, black 7px);
+  mask-image: radial-gradient(circle at 7px 0, transparent 6.5px, black 7px);
+  -webkit-mask-size: 14px 14px;
+  mask-size: 14px 14px;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+}

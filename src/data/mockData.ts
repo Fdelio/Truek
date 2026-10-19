@@ -62,11 +62,60 @@ export const INITIAL_FEED_ITEMS: FeedItem[] = [
   }
 ];
 
-export const INITIAL_INTERESTS: string[] = [
-  'Libros',
-  'Tecnología',
-  'Ropa',
-  'Muebles',
-  'Servicios',
-  'Aire libre'
+// Categorías del catálogo: cada una puede traer subcategorías opcionales
+// para publicar con más precisión (ej. "Indumentaria > Calzado"). Si no
+// se elige subcategoría, la publicación queda solo con la categoría
+// principal. Mismo criterio se usa en "¿Qué te interesa?" del registro.
+export interface CategoryGroup {
+  name: string;
+  subcategories: string[];
+}
+
+export const CATEGORIES: CategoryGroup[] = [
+  {
+    name: 'Alimentos',
+    subcategories: ['Almacén y conservas', 'Frescos y verdulería', 'Panificados y repostería', 'Bebidas', 'Dietética y suplementos'],
+  },
+  {
+    name: 'Hogar',
+    subcategories: ['Cocina y utensilios', 'Muebles', 'Decoración', 'Electrodomésticos', 'Herramientas y bricolaje', 'Jardín y exterior'],
+  },
+  {
+    name: 'Indumentaria',
+    subcategories: ['Ropa', 'Calzado', 'Accesorios', 'Ropa de bebés y niños'],
+  },
+  {
+    name: 'Electrónica',
+    subcategories: ['Celulares y tablets', 'Computación', 'Audio y video', 'Gaming', 'Cables y accesorios'],
+  },
+  {
+    name: 'Libros y papelería',
+    subcategories: ['Libros', 'Revistas y cómics', 'Útiles escolares', 'Oficina'],
+  },
+  {
+    name: 'Juguetes y bebés',
+    subcategories: ['Juguetes', 'Juegos de mesa', 'Artículos para bebés'],
+  },
+  {
+    name: 'Deportes y aire libre',
+    subcategories: ['Deportes', 'Bicicletas', 'Camping y aventura', 'Fitness'],
+  },
+  {
+    name: 'Mascotas',
+    subcategories: ['Alimento', 'Accesorios', 'Juguetes para mascotas'],
+  },
+  {
+    name: 'Salud y belleza',
+    subcategories: ['Cuidado personal', 'Cosmética', 'Perfumería'],
+  },
+  {
+    name: 'Servicios',
+    subcategories: ['Clases y tutorías', 'Reparaciones y oficios', 'Diseño y tecnología', 'Otros servicios'],
+  },
+  {
+    name: 'Otros',
+    subcategories: [],
+  },
 ];
+
+export const INITIAL_INTERESTS: string[] = CATEGORIES.map((c) => c.name);
