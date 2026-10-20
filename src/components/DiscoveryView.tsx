@@ -46,6 +46,10 @@ interface DiscoveryViewProps {
 
 const REPORT_REASONS: ReportReason[] = ['spam', 'estafa', 'contenido_inapropiado', 'no_corresponde', 'otro'];
 
+// Tope del slider de distancia. Al llegar acá no filtramos más por
+// distancia -- mostramos todo, sin límite -- en vez de cortar en 50km.
+const MAX_DISTANCE_KM = 50;
+
 export default function DiscoveryView({
   feedItems,
   onStartChat,
@@ -149,8 +153,11 @@ export default function DiscoveryView({
 
       // Filter by Distance slider value. Si no conocemos la distancia real
       // (todavía no tenemos la ubicación de alguna de las dos partes),
-      // nunca la descartamos por el slider — se deja pasar y listo.
-      result = result.filter(item => item.distance === null || item.distance <= distance);
+      // nunca la descartamos por el slider — se deja pasar y listo. Y si
+      // el slider está en el tope, tampoco filtramos por distancia: el
+      // tope significa "sin límite", no "hasta 50km".
+      const isUnlimited = distance >= MAX_DISTANCE_KM;
+      result = result.filter(item => isUnlimited || item.distance === null || item.distance <= distance);
 
       // Filter by active semantic filters
       if (activeTab === 'barters') {
@@ -183,7 +190,7 @@ export default function DiscoveryView({
     const val = parseInt(e.target.value);
     setDistance(val);
     addLog('Filtros: Slider de distancia modificado (Búsqueda optimista local)', {
-      newRadiusKm: val,
+      newRadiusKm: val >= MAX_DISTANCE_KM ? 'sin límite' : val,
       estimatedNetworkMatchCount: Math.max(1, Math.round(val * 0.4)),
     });
   };
@@ -284,19 +291,24 @@ export default function DiscoveryView({
         <div className="mt-3 bg-bg-soft p-3 rounded-xl border border-border/20">
           <div className="flex justify-between items-center text-[11px] font-bold text-ink-soft mb-1">
             <span>Rango máximo de distancia</span>
-            <span id="discovery-distance-display" className="text-gold-dark font-extrabold">{distance} Km</span>
+            <span id="discovery-distance-display" className="text-gold-dark font-extrabold">
+              {distance >= MAX_DISTANCE_KM ? 'Sin límite' : `${distance} Km`}
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <input 
+            <input
               id="discovery-distance-slider"
-              type="range" 
-              min="1" 
-              max="50" 
+              type="range"
+              min="1"
+              max={MAX_DISTANCE_KM}
               value={distance}
               onChange={handleSliderChange}
               className="flex-1 accent-primary cursor-pointer h-1 rounded-full bg-border"
             />
           </div>
+          {distance >= MAX_DISTANCE_KM && (
+            <p className="text-[9px] text-ink-faint mt-1">Mostrando publicaciones de cualquier distancia.</p>
+          )}
         </div>
       </section>
 
