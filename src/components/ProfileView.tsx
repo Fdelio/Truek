@@ -11,6 +11,7 @@ import { requestBrowserLocation, reverseGeocode, forwardGeocode } from '../lib/g
 import { fetchRatingSummary, fetchReceivedRatings, RatingSummary, ReceivedRating } from '../lib/ratings';
 import { fetchMyBlockedUsers, unblockUser, BlockedUser } from '../lib/blocks';
 import { normalizeUsername, isValidUsernameFormat, isUsernameAvailable } from '../lib/username';
+import { deleteMyAccount } from '../lib/account';
 
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb';
 
@@ -52,6 +53,28 @@ export default function ProfileView({ profile, userId, onProfileUpdated, onSignO
   // Usuarios que esta persona bloqueó, para poder desbloquearlos desde acá.
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [blockedUsersLoading, setBlockedUsersLoading] = useState(false);
+
+  // Borrar cuenta: pide confirmación escribiendo el propio nombre de
+  // usuario antes de habilitar el botón final, porque es irreversible.
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setDeleteAccountError(null);
+    const { error } = await deleteMyAccount();
+    if (error) {
+      setDeleteAccountError(error);
+      setIsDeletingAccount(false);
+      addLog('Perfil: error al eliminar la cuenta', { message: error });
+      return;
+    }
+    addLog('Perfil: cuenta eliminada por el usuario', {});
+    // No hace falta resetear estado local acá: deleteMyAccount ya cerró la
+    // sesión, y App.tsx escucha onAuthStateChange y manda a onboarding solo.
+  };
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
   const [unblockError, setUnblockError] = useState<string | null>(null);
 
@@ -616,6 +639,62 @@ export default function ProfileView({ profile, userId, onProfileUpdated, onSignO
         className="mt-6 w-full text-center text-[11px] font-semibold text-red-600 hover:underline py-2">
         Cerrar sesión
       </button>
+
+      <div className="mt-6 pt-4 border-t border-border/60">
+        {!showDeleteAccount ? (
+          <button
+            id="profile-delete-account-open-btn"
+            type="button"
+            onClick={() => {
+              setShowDeleteAccount(true);
+              setDeleteConfirmInput('');
+              setDeleteAccountError(null);
+            }}
+            className="w-full text-center text-[10px] font-semibold text-ink-faint hover:text-red-600 hover:underline py-1 transition-colors">
+            Eliminar cuenta
+          </button>
+        ) : (
+          <div id="profile-delete-account-panel" className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-2">
+            <p className="text-[11px] font-extrabold text-red-700">¿Eliminar tu cuenta de TrueK?</p>
+            <p className="text-[10px] text-red-700/90 leading-snug">
+              Esto borra para siempre tu perfil, tus publicaciones, tus ofertas de trueque, tus conversaciones y tus
+              créditos. No se puede deshacer. Para confirmar, escribí tu nombre de usuario (
+              <span className="font-bold">@{profile?.username}</span>) acá abajo:
+            </p>
+            <input
+              id="profile-delete-account-confirm-input"
+              type="text"
+              value={deleteConfirmInput}
+              onChange={(e) => setDeleteConfirmInput(e.target.value)}
+              placeholder={profile?.username || ''}
+              autoCapitalize="none"
+              autoCorrect="off"
+              className="w-full px-3 py-1.5 text-xs bg-white border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:outline-none text-ink"
+            />
+            {deleteAccountError && (
+              <p className="text-[10px] font-semibold text-red-700">{deleteAccountError}</p>
+            )}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                id="profile-delete-account-cancel-btn"
+                type="button"
+                disabled={isDeletingAccount}
+                onClick={() => setShowDeleteAccount(false)}
+                className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-red-200 text-ink-soft text-[10px] font-black uppercase tracking-wide hover:bg-red-50 disabled:opacity-60 transition-colors">
+                Cancelar
+              </button>
+              <button
+                id="profile-delete-account-confirm-btn"
+                type="button"
+                disabled={isDeletingAccount || deleteConfirmInput.trim() !== (profile?.username || '')}
+                onClick={handleDeleteAccount}
+                className="flex-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wide disabled:opacity-40 transition-colors">
+                {isDeletingAccount ? 'Eliminando...' : 'Sí, eliminar mi cuenta'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
