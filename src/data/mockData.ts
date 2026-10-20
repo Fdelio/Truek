@@ -93,7 +93,7 @@ export const CATEGORIES: CategoryGroup[] = [
     subcategories: ['Libros', 'Revistas y cómics', 'Útiles escolares', 'Oficina'],
   },
   {
-    name: 'Juguetes y bebés',
+    name: 'Juguetes y artículos para bebés',
     subcategories: ['Juguetes', 'Juegos de mesa', 'Artículos para bebés'],
   },
   {
