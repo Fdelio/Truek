@@ -104,8 +104,8 @@ export default function ModerationView({ addLog }: ModerationViewProps) {
       <header>
         <h1 className="font-display text-xl font-black text-ink-dark">Panel de moderación</h1>
         <p className="text-xs text-ink-soft mt-0.5">
-          Reportes que mandaron otros usuarios, todavía sin revisar. Podés descartarlos, eliminar la publicación
-          reportada o suspender a la cuenta responsable.
+          Reportes que mandaron otras personas, todavía sin revisar. Podés descartarlos, eliminar la publicación
+          reportada o suspender la cuenta responsable.
         </p>
       </header>
 
@@ -131,7 +131,7 @@ export default function ModerationView({ addLog }: ModerationViewProps) {
         <div className="flex flex-col items-center text-center py-10">
           <TruekMascot className="w-16 h-16 mb-2 animate-truek-float" />
           <p className="text-sm font-semibold text-ink">No hay reportes pendientes</p>
-          <p className="text-xs text-ink-soft mt-1">Cuando alguien reporte una publicación o un usuario, va a aparecer acá.</p>
+          <p className="text-xs text-ink-soft mt-1">Cuando alguien reporte una publicación o a otra persona, va a aparecer acá.</p>
         </div>
       )}
 
@@ -165,7 +165,7 @@ export default function ModerationView({ addLog }: ModerationViewProps) {
                 )}
                 {!report.reportedListingTitle && targetUserName && (
                   <p className="text-xs text-ink">
-                    Usuario reportado: <span className="font-bold">{targetUserName}</span>
+                    Persona reportada: <span className="font-bold">{targetUserName}</span>
                   </p>
                 )}
                 {report.comment && (
@@ -225,7 +225,7 @@ export default function ModerationView({ addLog }: ModerationViewProps) {
                         disabled={isActing}
                         onClick={() => openSuspendPrompt(report)}
                         className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wide disabled:opacity-60 transition-colors">
-                        Suspender usuario
+                        Suspender cuenta
                       </button>
                     )}
                   </div>

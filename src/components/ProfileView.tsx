@@ -54,6 +54,11 @@ export default function ProfileView({
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // Popup con la explicación completa de "¿Cuánto vale un crédito?" — lo
+  // pidieron más visible, así que ahora el cartel del perfil es un botón
+  // grande que abre esto, en vez de solo un texto chiquito.
+  const [showCreditsInfoModal, setShowCreditsInfoModal] = useState(false);
+
   // Reputación real: promedio + cantidad de calificaciones que otros
   // usuarios dejaron sobre esta persona después de trueques cerrados.
   const [ratingSummary, setRatingSummary] = useState<RatingSummary>({ average: null, total: 0 });
@@ -383,18 +388,55 @@ export default function ProfileView({
         </div>
       </div>
 
-      {/* Valor de referencia de los créditos: una guía fija (no un tipo
-          de cambio) para que las ofertas en créditos tengan sentido,
-          tomando en cuenta que todo el mundo arranca con 100. */}
-      <div id="profile-credits-reference-note" className="mt-3 p-3 bg-plum-light border border-plum/30 rounded-xl flex items-start gap-2">
-        <span className="material-symbols-rounded text-[16px] text-primary shrink-0 mt-0.5">lightbulb</span>
-        <p className="text-[10px] text-primary leading-snug">
-          <span className="font-extrabold">¿Cuánto vale un crédito?</span> Como referencia, 1 crédito ≈ el valor de un
-          litro de nafta súper. Te suscribís con 100, así que esto te sirve de guía para ofertar con sentido: objetos
-          chicos 5-15 créditos, medianos 20-50, y grandes o de alto valor 60-150 o más. No es un tipo de cambio fijo,
-          solo una ayuda para que las ofertas sean razonables.
-        </p>
-      </div>
+      {/* Valor de referencia de los créditos: antes era un cartel chico y
+          pasaba desapercibido, así que ahora es un botón grande y
+          llamativo que abre la explicación completa en un popup. */}
+      <button
+        id="profile-credits-reference-note"
+        type="button"
+        onClick={() => setShowCreditsInfoModal(true)}
+        className="mt-3 w-full p-4 bg-plum-light border-2 border-plum/40 rounded-xl flex items-center gap-3 text-left hover:border-plum active:scale-[0.98] transition-all">
+        <span className="material-symbols-rounded text-[26px] text-primary shrink-0">lightbulb</span>
+        <div className="flex-1">
+          <p className="text-sm font-black text-primary leading-tight">¿Cuánto vale un crédito?</p>
+          <p className="text-[11px] text-primary/80 leading-snug mt-0.5">Tocá para ver la guía de referencia</p>
+        </div>
+        <span className="material-symbols-rounded text-[18px] text-primary shrink-0">chevron_right</span>
+      </button>
+
+      {showCreditsInfoModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          onClick={() => setShowCreditsInfoModal(false)}>
+          <div
+            id="credits-info-modal"
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-3">
+            <div className="flex items-start gap-2">
+              <span className="material-symbols-rounded text-[28px] text-primary shrink-0">lightbulb</span>
+              <h2 className="font-display text-lg font-black text-ink-dark leading-tight">¿Cuánto vale un crédito?</h2>
+            </div>
+            <p className="text-sm text-ink leading-relaxed">
+              Como referencia, 1 crédito ≈ el valor de un litro de nafta súper. Te suscribís con 100, así que esto te
+              sirve de guía para ofertar con sentido:
+            </p>
+            <ul className="text-sm text-ink leading-relaxed list-disc pl-5 space-y-1">
+              <li>Objetos chicos: 5 a 15 créditos</li>
+              <li>Objetos medianos: 20 a 50 créditos</li>
+              <li>Objetos grandes o de alto valor: 60 a 150 créditos o más</li>
+            </ul>
+            <p className="text-[11px] text-ink-soft leading-relaxed">
+              No es un tipo de cambio fijo, solo una ayuda para que las ofertas sean razonables.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowCreditsInfoModal(false)}
+              className="mt-1 w-full py-2.5 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-dark active:scale-95 transition-all">
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
 
       {avatarError && (
         <p id="profile-avatar-error" className="mt-2 text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">

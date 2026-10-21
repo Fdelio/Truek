@@ -9,6 +9,7 @@ import { FeedItem } from '../types';
 import { formatDistance } from '../lib/geo';
 import { submitReport, ReportReason, REPORT_REASON_LABELS } from '../lib/reports';
 import { blockUser } from '../lib/blocks';
+import ListingDetailView from './ListingDetailView';
 
 // Texto de distancia para la card: si el vendedor eligió "A definir por
 // chat" para esta publicación, nunca mostramos "Distancia desconocida"
@@ -83,6 +84,10 @@ export default function DiscoveryView({
   // Catálogo al instante, sin esperar a que se vuelva a traer el feed
   // real del servidor.
   const [locallyBlockedSellerIds, setLocallyBlockedSellerIds] = useState<Set<string>>(new Set());
+
+  // Publicación abierta en la pantalla de detalle (galería ampliable +
+  // descripción completa), si alguna. null = no hay ninguna abierta.
+  const [viewingItem, setViewingItem] = useState<FeedItem | null>(null);
 
   const openReportModal = (item: FeedItem) => {
     setReportingItem(item);
@@ -362,8 +367,14 @@ export default function DiscoveryView({
               <div
                 id={`feed-card-${item.id}`}
                 key={item.id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 hover:rotate-1 transition-all duration-300 ease-bounce flex flex-col justify-between">
-                
+                role="button"
+                tabIndex={0}
+                onClick={() => setViewingItem(item)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') setViewingItem(item);
+                }}
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 hover:rotate-1 transition-all duration-300 ease-bounce flex flex-col justify-between cursor-pointer">
+
                 {/* Product Image Panel */}
                 <div className="relative aspect-[4/3] bg-bg-soft overflow-hidden">
                   <img alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={item.image} />
@@ -420,7 +431,8 @@ export default function DiscoveryView({
                     <button 
                       id={`chat-action-${item.id}`}
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         addLog('Navigation: Abriendo sala de chat con el oferente', { itemTitle: item.title, userName: item.userName });
                         onStartChat(item);
                       }}
@@ -535,6 +547,22 @@ export default function DiscoveryView({
             )}
           </div>
         </div>
+      )}
+
+      {viewingItem && (
+        <ListingDetailView
+          item={viewingItem}
+          onClose={() => setViewingItem(null)}
+          onStartChat={(item) => {
+            addLog('Navigation: Abriendo sala de chat con el oferente', { itemTitle: item.title, userName: item.userName });
+            setViewingItem(null);
+            onStartChat(item);
+          }}
+          onReport={(item) => {
+            setViewingItem(null);
+            openReportModal(item);
+          }}
+        />
       )}
     </div>
   );

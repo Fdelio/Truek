@@ -82,6 +82,11 @@ export interface PublishState {
   deliveryLng: number | null;
   deliveryLocationLabel: string | null; // texto legible (ej. "Palermo, Argentina"), solo con deliveryMode 'custom'
   deliveryNote: string; // nota libre opcional, visible sin importar el modo elegido
+  // Campos opcionales con detalle del artículo. "condition" es texto libre
+  // (la UI ofrece chips de sugerencia tipo "Como nuevo" que solo rellenan
+  // este mismo input) y "extraDetails" es para medidas u otro dato suelto.
+  condition: string;
+  extraDetails: string;
 }
 
 export interface FeedItem {
@@ -98,6 +103,15 @@ export interface FeedItem {
   // necesitamos para poder crear una conversación real con esa persona.
   sellerId: string;
   image: string;
+  // Galería completa (puede tener 1 o varias fotos). "image" arriba sigue
+  // existiendo por compatibilidad: siempre es images[0].
+  images: string[];
+  description: string | null;
+  // Estado del artículo, texto libre (ej. "Como nuevo", "Con poco uso").
+  // null si quien publicó no lo completó (campo opcional).
+  condition: string | null;
+  // Medidas u otro detalle suelto que no entra en descripción. También opcional.
+  extraDetails: string | null;
   tag?: string; // e.g. "RECIÉN PUBLICADO", "SMART MATCH"
   isSmartMatch?: boolean;
   // Mismo significado que PublishState.deliveryMode: de dónde viene la

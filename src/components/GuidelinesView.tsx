@@ -23,26 +23,26 @@ export default function GuidelinesView({ onAccept, onClose }: GuidelinesViewProp
         <TruekMascot className="w-12 h-12 shrink-0" />
         <div>
           <h1 className="font-display text-xl font-black text-ink-dark leading-none">Normas de la comunidad</h1>
-          <p className="text-[11px] text-ink-soft mt-0.5">Para que TrueK siga siendo un buen lugar para todos</p>
+          <p className="text-[11px] text-ink-soft mt-0.5">Para que TrueK siga siendo un buen lugar para toda la comunidad</p>
         </div>
       </div>
 
       <section className="space-y-1.5">
         <h2 className="text-sm font-bold text-primary-dark">¿Para qué existe TrueK?</h2>
         <p className="text-xs text-ink-soft leading-relaxed">
-          TrueK es un espacio para que vecinos y vecinas intercambien o donen cosas que ya no usan, en vez de
+          TrueK es un espacio para que las personas del barrio intercambien o donen cosas que ya no usan, en vez de
           tirarlas. Funciona porque la comunidad que lo usa actúa de buena fe: publica cosas reales, cumple lo que
-          acuerda por el chat y trata a la otra persona con respeto, como a un vecino más.
+          acuerda por el chat y trata a la otra persona con respeto, como a cualquier persona del barrio.
         </p>
       </section>
 
       <section className="space-y-1.5">
-        <h2 className="text-sm font-bold text-primary-dark">Lo que esperamos de cada usuario</h2>
+        <h2 className="text-sm font-bold text-primary-dark">Lo que esperamos de quienes usan TrueK</h2>
         <ul className="text-xs text-ink-soft leading-relaxed list-disc pl-4 space-y-1">
           <li>Publicar artículos que realmente tenés y que son legales de poseer e intercambiar.</li>
           <li>Describir el estado real del artículo, sin engañar a la otra persona.</li>
           <li>Coordinar la entrega en un lugar seguro, preferentemente público y de día.</li>
-          <li>Tratar a los demás con respeto, incluso si un trueque no se termina concretando.</li>
+          <li>Tratar a las demás personas con respeto, incluso si un trueque no se termina concretando.</li>
           <li>Reportar o bloquear a quien tenga un comportamiento sospechoso, en vez de seguirle el juego.</li>
         </ul>
       </section>
@@ -68,7 +68,7 @@ export default function GuidelinesView({ onAccept, onClose }: GuidelinesViewProp
         <ul className="text-xs text-ink-soft leading-relaxed list-disc pl-4 space-y-1">
           <li>Charlá los detalles por el chat de la app antes de acordar una entrega.</li>
           <li>Si algo te genera dudas (el precio, la historia, la urgencia de la otra persona), confiá en esa duda.</li>
-          <li>Preferí encontrarte en un lugar público, y si podés, acompañado.</li>
+          <li>Preferí encontrarte en un lugar público, y si podés, avisale a alguien de confianza dónde vas a estar.</li>
           <li>Revisá el artículo antes de confirmar la entrega como concretada.</li>
           <li>Usá "Reportar" o "Bloquear" apenas detectes algo raro — no hace falta esperar a que termine mal.</li>
         </ul>
@@ -79,13 +79,13 @@ export default function GuidelinesView({ onAccept, onClose }: GuidelinesViewProp
         <p className="text-xs text-ink-soft leading-relaxed">
           TrueK es un punto de encuentro: te ayuda a encontrar personas cerca con quienes intercambiar o donar
           cosas, pero no participa de la entrega, no inspecciona los artículos y no interviene en el acuerdo entre
-          las partes. Cada trueque o donación es un acuerdo directo entre los usuarios involucrados, bajo su propia
+          las partes. Cada trueque o donación es un acuerdo directo entre las personas involucradas, bajo su propia
           responsabilidad.
         </p>
         <p className="text-xs text-ink-soft leading-relaxed">
           En la medida permitida por la ley, TrueK y quienes lo desarrollan no son responsables por la calidad,
-          legalidad o seguridad de los artículos publicados, por la veracidad de lo que dice cada usuario, ni por lo
-          que pase durante un encuentro o entrega acordado entre usuarios. Si tenés un problema con otro usuario o
+          legalidad o seguridad de los artículos publicados, por la veracidad de lo que dice quien publica, ni por lo
+          que pase durante un encuentro o entrega acordado entre las partes. Si tenés un problema con otra persona o
           con un artículo publicado, por favor reportalo desde la app para que podamos revisarlo.
         </p>
       </section>

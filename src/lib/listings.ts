@@ -17,9 +17,12 @@ interface ListingWithDistanceRow {
   id: string;
   user_id: string;
   title: string;
+  description: string | null;
   category: string | null;
   listing_kind: 'trueque' | 'donacion';
   images: string[] | null;
+  condition: string | null;
+  extra_details: string | null;
   created_at: string;
   seller_display_name: string | null;
   seller_avatar_url: string | null;
@@ -35,6 +38,8 @@ export function mapListingToFeedItem(row: ListingWithDistanceRow): FeedItem {
   const publishedRecently =
     Date.now() - new Date(row.created_at).getTime() < 1000 * 60 * 60 * 48; // 48hs
 
+  const images = row.images && row.images.length > 0 ? row.images : [DEFAULT_IMAGE];
+
   return {
     id: row.id,
     title: row.title,
@@ -44,7 +49,11 @@ export function mapListingToFeedItem(row: ListingWithDistanceRow): FeedItem {
     userName: row.seller_display_name ?? 'Usuario TrueK',
     userAvatar: row.seller_avatar_url ?? DEFAULT_AVATAR,
     sellerId: row.user_id,
-    image: row.images && row.images.length > 0 ? row.images[0] : DEFAULT_IMAGE,
+    image: images[0],
+    images,
+    description: row.description,
+    condition: row.condition,
+    extraDetails: row.extra_details,
     tag: publishedRecently ? 'RECIÉN PUBLICADO' : undefined,
     deliveryMode: row.delivery_mode,
     deliveryLocationLabel: row.delivery_location_label,
@@ -62,11 +71,11 @@ export async function fetchActiveListings(
   viewerLat: number | null,
   viewerLng: number | null
 ): Promise<{ items: FeedItem[]; error: string | null }> {
-  // v2: igual que listings_with_distance pero además calcula la distancia
-  // usando la ubicación de entrega propia de cada publicación cuando la
-  // tiene (en vez de siempre la del perfil del vendedor), y devuelve el
-  // modo de entrega + nota libre para mostrar en el Catálogo.
-  const { data, error } = await supabase.rpc('listings_with_distance_v2', {
+  // v3: igual que v2 (distancia con la ubicación de entrega propia de cada
+  // publicación cuando la tiene, modo de entrega + nota libre) pero además
+  // trae la descripción completa y los campos opcionales de detalle
+  // (estado del producto, medidas/otros) para la pantalla de detalle.
+  const { data, error } = await supabase.rpc('listings_with_distance_v3', {
     viewer_lat: viewerLat,
     viewer_lng: viewerLng,
   });
@@ -112,6 +121,8 @@ function buildListingPayload(userId: string, publishState: PublishState, status:
     description: publishState.description.trim() || null,
     category: publishState.category || null,
     images,
+    condition: publishState.condition.trim() || null,
+    extra_details: publishState.extraDetails.trim() || null,
     listing_kind: isDonation ? 'donacion' : 'trueque',
     exchange_type: exchangeType,
     credit_value: creditValue,
@@ -181,6 +192,8 @@ export interface OwnedListing {
   deliveryLng: number | null;
   deliveryLocationLabel: string | null;
   deliveryNote: string | null;
+  condition: string | null;
+  extraDetails: string | null;
 }
 
 export type DraftListing = OwnedListing;
@@ -200,10 +213,12 @@ interface OwnedListingRow {
   delivery_lng: number | null;
   delivery_location_label: string | null;
   delivery_note: string | null;
+  condition: string | null;
+  extra_details: string | null;
 }
 
 const OWNED_LISTING_SELECT =
-  'id, title, description, category, images, listing_kind, exchange_type, credit_value, updated_at, delivery_mode, delivery_lat, delivery_lng, delivery_location_label, delivery_note';
+  'id, title, description, category, images, listing_kind, exchange_type, credit_value, updated_at, delivery_mode, delivery_lat, delivery_lng, delivery_location_label, delivery_note, condition, extra_details';
 
 function mapOwnedListingRow(row: OwnedListingRow): OwnedListing {
   return {
@@ -221,6 +236,8 @@ function mapOwnedListingRow(row: OwnedListingRow): OwnedListing {
     deliveryLng: row.delivery_lng,
     deliveryLocationLabel: row.delivery_location_label,
     deliveryNote: row.delivery_note,
+    condition: row.condition,
+    extraDetails: row.extra_details,
   };
 }
 

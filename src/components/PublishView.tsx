@@ -36,6 +36,8 @@ const BLANK_PUBLISH_STATE: PublishState = {
   deliveryLng: null,
   deliveryLocationLabel: null,
   deliveryNote: '',
+  condition: '',
+  extraDetails: '',
 };
 
 export default function PublishView({
@@ -272,6 +274,8 @@ export default function PublishView({
       deliveryLng: listing.deliveryLng,
       deliveryLocationLabel: listing.deliveryLocationLabel,
       deliveryNote: listing.deliveryNote ?? '',
+      condition: listing.condition ?? '',
+      extraDetails: listing.extraDetails ?? '',
     });
     setDeliveryAddressQuery('');
     setDeliveryLocationError(null);
@@ -725,6 +729,49 @@ export default function PublishView({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Campos opcionales de detalle: estado del artículo (chips de
+              sugerencia que rellenan un input de texto libre, igual que
+              "¿Qué buscas a cambio?" más abajo) y un dato suelto extra
+              (medidas, etc.). Ninguno es obligatorio para publicar. */}
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-semibold text-ink-soft" htmlFor="publish-condition-input">
+              Estado del producto <span className="text-ink-faint font-normal">(opcional)</span>
+            </label>
+            <input
+              id="publish-condition-input"
+              type="text"
+              value={publishState.condition}
+              onChange={(e) => setPublishState((prev) => ({ ...prev, condition: e.target.value }))}
+              placeholder="Ej. Como nuevo, con poco uso..."
+              className="w-full px-4 py-2 text-sm bg-bg-soft border-none rounded-xl focus:ring-2 focus:ring-primary focus:bg-white focus:outline-none transition-all text-ink"
+            />
+            <div className="flex flex-wrap gap-1">
+              {['Como nuevo', 'Con poco uso', 'Muy usado'].map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setPublishState((prev) => ({ ...prev, condition: chip }))}
+                  className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[9px] font-semibold hover:bg-primary/20 hover:-rotate-2 hover:scale-105 active:scale-95 transition-all duration-200 ease-bounce">
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-ink-soft mb-1" htmlFor="publish-extra-details-input">
+              Medidas u otro detalle <span className="text-ink-faint font-normal">(opcional)</span>
+            </label>
+            <input
+              id="publish-extra-details-input"
+              type="text"
+              value={publishState.extraDetails}
+              onChange={(e) => setPublishState((prev) => ({ ...prev, extraDetails: e.target.value }))}
+              placeholder="Ej. 40x30 cm, talle M..."
+              className="w-full px-4 py-2 text-sm bg-bg-soft border-none rounded-xl focus:ring-2 focus:ring-primary focus:bg-white focus:outline-none transition-all text-ink"
+            />
           </div>
 
           {/* Conditional Trade Value Requirement Box */}
