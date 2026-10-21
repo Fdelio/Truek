@@ -166,6 +166,8 @@ export default function App() {
     deliveryLng: null,
     deliveryLocationLabel: null,
     deliveryNote: '',
+    condition: '',
+    extraDetails: '',
   });
 
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
