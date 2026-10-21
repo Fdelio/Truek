@@ -30,9 +30,9 @@ export default function GuidelinesView({ onAccept, onClose }: GuidelinesViewProp
       <section className="space-y-1.5">
         <h2 className="text-sm font-bold text-primary-dark">¿Para qué existe TrueK?</h2>
         <p className="text-xs text-ink-soft leading-relaxed">
-          TrueK es un espacio para que las personas del barrio intercambien o donen cosas que ya no usan, en vez de
+          TrueK es un espacio para intercambiar o donar, con personas cerca tuyo, cosas que ya no usás, en vez de
           tirarlas. Funciona porque la comunidad que lo usa actúa de buena fe: publica cosas reales, cumple lo que
-          acuerda por el chat y trata a la otra persona con respeto, como a cualquier persona del barrio.
+          acuerda por el chat y trata a la otra persona con el mismo respeto que esperás que tengan con vos.
         </p>
       </section>
 

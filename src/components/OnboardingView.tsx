@@ -355,7 +355,7 @@ export default function OnboardingView({
             <span className="material-symbols-rounded text-[20px] text-primary-light">explore</span>
             <span className="text-xs font-bold tracking-wider uppercase text-primary-light/85">Geolocalización Activa</span>
           </div>
-          <p className="text-xs text-white/95">Detección automática de zonas comerciales para emparejarte con vecinos a menos de 5 kilómetros.</p>
+          <p className="text-xs text-white/95">Detección automática de zonas comerciales para emparejarte con personas cerca tuyo, a menos de 5 kilómetros.</p>
         </div>
 
         <div className="relative z-0 opacity-15 pointer-events-none select-none animate-truek-float">

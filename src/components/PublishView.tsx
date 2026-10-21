@@ -790,8 +790,14 @@ export default function PublishView({
                   />
                   <span className="material-symbols-rounded text-primary absolute right-3 top-1/2 -translate-y-1/2">swap_horiz</span>
                 </div>
-                <div className="flex gap-1">
-                  {['Abierto a Todo', 'Tecnología', 'Bicicletas'].map((chip) => (
+                {/* Chips con las mismas categorías reales del selector de
+                    "Categoría" de arriba (en vez de una lista fija que no
+                    coincidía con las categorías de la app) — así la
+                    selección es acotada y consistente con el resto del
+                    sitio. El input sigue siendo de texto libre: estos
+                    chips solo lo rellenan rápido. */}
+                <div className="flex flex-wrap gap-1">
+                  {['Abierto a todo', ...CATEGORIES.map((c) => c.name)].map((chip) => (
                     <button
                       key={chip}
                       type="button"
@@ -799,7 +805,11 @@ export default function PublishView({
                         setPublishState((prev) => ({ ...prev, exchangeSearch: chip }));
                         addLog(`Posteo: Preferencia autoseleccionada: "${chip}"`, {});
                       }}
-                      className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[9px] font-semibold hover:bg-primary/20 hover:-rotate-2 hover:scale-105 active:scale-95 transition-all duration-200 ease-bounce">
+                      className={`px-2.5 py-0.5 rounded-full border text-[9px] font-semibold transition-all duration-200 ease-bounce hover:-rotate-2 hover:scale-105 active:scale-95 ${
+                        publishState.exchangeSearch === chip
+                          ? 'bg-primary text-primary-light border-primary'
+                          : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
+                      }`}>
                       {chip}
                     </button>
                   ))}

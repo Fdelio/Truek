@@ -648,7 +648,7 @@ export default function ProfileView({
       {(blockedUsersLoading || blockedUsers.length > 0) && (
         <div className="mt-4 p-4 rounded-xl border border-border/30 bg-white shadow-sm space-y-2">
           <span className="block text-[11px] font-bold text-ink-soft uppercase tracking-wide">
-            Usuarios bloqueados {blockedUsers.length > 0 && `(${blockedUsers.length})`}
+            Cuentas bloqueadas {blockedUsers.length > 0 && `(${blockedUsers.length})`}
           </span>
 
           {blockedUsersLoading && (
