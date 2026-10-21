@@ -15,6 +15,9 @@ import PublishView from './components/PublishView';
 import DiscoveryView from './components/DiscoveryView';
 import ChatView, { ActiveChatInfo } from './components/ChatView';
 import ProfileView from './components/ProfileView';
+import ModerationView from './components/ModerationView';
+import GuidelinesView from './components/GuidelinesView';
+import TruekMascot from './components/TruekMascot';
 
 interface LogEntry {
   id: string;
@@ -81,7 +84,7 @@ export default function App() {
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('id, username, display_name, avatar_url, bio, location, lat, lng, credits, credits_held')
+      .select('id, username, display_name, avatar_url, bio, location, lat, lng, credits, credits_held, is_admin, is_suspended, suspended_reason')
       .eq('id', session.user.id)
       .single();
 
@@ -290,6 +293,29 @@ export default function App() {
     );
   }
 
+  // Una cuenta suspendida por moderación no puede usar la app: ni ver el
+  // catálogo, ni publicar, ni chatear. Mostramos una pantalla de bloqueo
+  // en vez del shell normal (igual puede cerrar sesión).
+  if (profile?.is_suspended) {
+    return (
+      <main className="min-h-screen bg-bg flex flex-col items-center justify-center p-6 text-center">
+        <TruekMascot className="w-16 h-16 mb-3" />
+        <h1 className="font-display text-lg font-black text-ink-dark">Tu cuenta está suspendida</h1>
+        <p className="text-xs text-ink-soft mt-2 max-w-xs">
+          Un administrador suspendió temporalmente tu cuenta de TrueK
+          {profile.suspended_reason ? <> por el siguiente motivo: <span className="font-semibold">{profile.suspended_reason}</span></> : '.'}{' '}
+          Mientras esté suspendida no podés publicar, ofertar ni chatear.
+        </p>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="mt-5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-dark active:scale-95 transition-all">
+          Cerrar sesión
+        </button>
+      </main>
+    );
+  }
+
   // Red de seguridad: si por algún instante quedó "onboarding" como
   // pantalla activa pero ya hay sesión, mostramos el Catálogo en vez de
   // una pantalla en blanco.
@@ -416,7 +442,19 @@ export default function App() {
           />
         )}
         {activeScreen === 'profile' && (
-          <ProfileView profile={profile} userId={session.user.id} onProfileUpdated={refreshProfile} onSignOut={handleSignOut} addLog={addLog} />
+          <ProfileView
+            profile={profile}
+            userId={session.user.id}
+            onProfileUpdated={refreshProfile}
+            onSignOut={handleSignOut}
+            onOpenGuidelines={() => handleScreenChange('guidelines')}
+            onOpenModeration={() => handleScreenChange('moderation')}
+            addLog={addLog}
+          />
+        )}
+        {activeScreen === 'moderation' && profile?.is_admin && <ModerationView addLog={addLog} />}
+        {activeScreen === 'guidelines' && (
+          <GuidelinesView onClose={() => handleScreenChange('profile')} />
         )}
       </div>
 

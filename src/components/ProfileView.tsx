@@ -20,10 +20,20 @@ interface ProfileViewProps {
   userId: string;
   onProfileUpdated: () => void | Promise<void>;
   onSignOut: () => void;
+  onOpenGuidelines: () => void;
+  onOpenModeration: () => void;
   addLog: (title: string, data: any) => void;
 }
 
-export default function ProfileView({ profile, userId, onProfileUpdated, onSignOut, addLog }: ProfileViewProps) {
+export default function ProfileView({
+  profile,
+  userId,
+  onProfileUpdated,
+  onSignOut,
+  onOpenGuidelines,
+  onOpenModeration,
+  addLog,
+}: ProfileViewProps) {
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [bioInput, setBioInput] = useState('');
   const [usernameInput, setUsernameInput] = useState('');
@@ -632,11 +642,32 @@ export default function ProfileView({ profile, userId, onProfileUpdated, onSignO
         </div>
       )}
 
+      <div className="mt-6 pt-4 border-t border-border/60 space-y-1.5">
+        {profile?.is_admin && (
+          <button
+            id="profile-open-moderation-btn"
+            type="button"
+            onClick={onOpenModeration}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-plum-light hover:bg-plum/20 text-plum text-xs font-bold transition-colors">
+            <span className="material-symbols-rounded text-[16px]">shield_person</span>
+            Panel de moderación
+          </button>
+        )}
+        <button
+          id="profile-open-guidelines-btn"
+          type="button"
+          onClick={onOpenGuidelines}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-bg-soft hover:bg-border text-ink-soft text-xs font-bold transition-colors">
+          <span className="material-symbols-rounded text-[16px]">diversity_3</span>
+          Normas de la comunidad
+        </button>
+      </div>
+
       <button
         id="profile-signout-btn"
         type="button"
         onClick={onSignOut}
-        className="mt-6 w-full text-center text-[11px] font-semibold text-red-600 hover:underline py-2">
+        className="mt-3 w-full text-center text-[11px] font-semibold text-red-600 hover:underline py-2">
         Cerrar sesión
       </button>
 

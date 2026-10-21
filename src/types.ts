@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ScreenType = 'onboarding' | 'publish' | 'discovery' | 'chat' | 'profile';
+export type ScreenType = 'onboarding' | 'publish' | 'discovery' | 'chat' | 'profile' | 'moderation' | 'guidelines';
 
 // Refleja la tabla public.user_profiles en Supabase.
 export interface Profile {
@@ -22,6 +22,14 @@ export interface Profile {
   // entregado de verdad: salieron de "credits" pero no entraron a la
   // cuenta de la otra persona hasta que ambos confirmen la entrega.
   credits_held: number;
+  // Panel de moderación: solo true para la/s cuenta/s administradoras de
+  // TrueK (hoy, Fer). No se puede cambiar desde el cliente -- un trigger
+  // en la base lo protege aunque alguien intente pisarlo por API directa.
+  is_admin: boolean;
+  // Si está en true, esta cuenta no puede publicar, ofertar ni chatear
+  // (bloqueado también a nivel de RLS, no solo en la UI).
+  is_suspended: boolean;
+  suspended_reason: string | null;
 }
 
 export interface OnboardingState {

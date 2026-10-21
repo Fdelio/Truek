@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TruekMascot from './TruekMascot';
+import GuidelinesView from './GuidelinesView';
 import { OnboardingState } from '../types';
 import { INITIAL_INTERESTS } from '../data/mockData';
 import { supabase } from '../lib/supabaseClient';
@@ -43,6 +44,12 @@ export default function OnboardingView({
   // inmediata cuyo cleanup cancelaba la petición de ubicación recién
   // iniciada, dejando el spinner colgado para siempre (ese era el bug).
   const [locationAttempt, setLocationAttempt] = useState(0);
+
+  // Solo aplica en modo "signup": tiene que aceptar las normas de la
+  // comunidad antes de poder crear la cuenta. showGuidelinesModal abre el
+  // texto completo para leerlo (se puede aceptar desde ahí directamente).
+  const [acceptedGuidelines, setAcceptedGuidelines] = useState(false);
+  const [showGuidelinesModal, setShowGuidelinesModal] = useState(false);
 
   // Pide la ubicación real al navegador (requiere permiso del usuario).
   // Si falla o la rechaza, cae a modo manual: el usuario escribe su zona
@@ -192,6 +199,12 @@ export default function OnboardingView({
     e.preventDefault();
     setAuthError(null);
     setAuthNotice(null);
+
+    if (authMode === 'signup' && !acceptedGuidelines) {
+      setAuthError('Para crear tu cuenta, primero tenés que leer y aceptar las normas de la comunidad.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -256,6 +269,14 @@ export default function OnboardingView({
             addLog('Perfil: no se pudo guardar la ubicación detectada', { message: updateError.message });
           }
         }
+
+        const { error: termsError } = await supabase
+          .from('user_profiles')
+          .update({ terms_accepted_at: new Date().toISOString() })
+          .eq('id', data.user!.id);
+        if (termsError) {
+          addLog('Perfil: no se pudo guardar la aceptación de las normas', { message: termsError.message });
+        }
       } else {
         addLog('Login: Resolviendo si el identificador ingresado es mail o nombre de usuario', { identifier: emailText });
 
@@ -291,7 +312,7 @@ export default function OnboardingView({
 
   const isFormValid =
     authMode === 'signup'
-      ? emailText.includes('@') && passwordText.length >= 6 && usernameOk
+      ? emailText.includes('@') && passwordText.length >= 6 && usernameOk && acceptedGuidelines
       : emailText.trim().length > 0 && passwordText.length >= 6;
 
   return (
@@ -492,6 +513,32 @@ export default function OnboardingView({
                 </button>
               </div>
             </div>
+
+            {authMode === 'signup' && (
+              <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
+                <input
+                  id="onboarding-accept-guidelines-checkbox"
+                  type="checkbox"
+                  checked={acceptedGuidelines}
+                  onChange={(e) => setAcceptedGuidelines(e.target.checked)}
+                  className="mt-0.5 w-3.5 h-3.5 accent-primary shrink-0"
+                />
+                <span className="text-[10.5px] text-ink-soft leading-snug">
+                  Leí y acepto las{' '}
+                  <button
+                    id="onboarding-open-guidelines-btn"
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowGuidelinesModal(true);
+                    }}
+                    className="font-bold text-primary hover:underline">
+                    Normas de la comunidad
+                  </button>{' '}
+                  de TrueK.
+                </span>
+              </label>
+            )}
           </form>
 
           {/* Interactive Geolocation Widget */}
@@ -638,6 +685,15 @@ export default function OnboardingView({
             <div className="absolute top-0 bottom-0 left-0 bg-primary animate-[shimmer_1.5s_infinite] w-12" style={{ animationTimingFunction: 'linear' }} />
           </div>
         </div>
+      )}
+
+      {showGuidelinesModal && (
+        <GuidelinesView
+          onAccept={() => {
+            setAcceptedGuidelines(true);
+            setShowGuidelinesModal(false);
+          }}
+        />
       )}
     </div>
   );
